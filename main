@@ -1,0 +1,143 @@
+#vi starter med at importere de indbyggede python pakker
+import time
+import pygame
+import random
+
+
+# initialiserer pygame moduler
+pygame.init()
+
+# anvende RGB-farvekoder til display
+white = (255, 255, 255)
+yellow = (255, 255, 102)
+green = (0, 255, 0)
+blue = (50, 153, 213)
+red = (213, 50, 80)
+black = (0, 0, 0)
+
+# længde og bredde på displayet
+dis_width = 800
+dis_height = 800
+
+# display.set.mode tager en tuple (dis) og laver en overflade/display
+dis = pygame.display.set_mode((dis_height, dis_height))
+pygame.display.set_caption("Mortens snake-spil")
+
+# vi tilføjer en tidsscore der tracker tiden
+clock = pygame.time.Clock()
+
+# Slangen blokeres/standses ved værdien 10
+slange_stop = 10
+# slangens fart er 30
+slange_fart = 30
+
+# Sysfont skaber et font-objekt der loades fra systemets fonter
+font_style = pygame.font.SysFont("bahnschrift", 25)
+score_font = pygame.font.SysFont("comicsansms", 35)
+
+# Funktion består af variablen "value" som bliver render/tegnet på overfladen
+ # værdien er True, så den vil vise scoren i farven gul og det blittes til skærmen
+def Din_score(score):
+    value = score_font.render("Din score: " + str(score), True, yellow)
+    dis.blit(value, [0, 0])
+
+#Funktionen består af at slangen skal kunne stoppe og få værdier til listen (så den vokser9
+def vores_slange(slange_stop, slange_liste):
+    for x in slange_liste:
+        pygame.draw.rect(dis, black, [x[0], x[1], slange_stop, slange_stop])
+
+# DENNE VIRKER LIGEGYLDIG, DA ALT VIRKER NÅR KODEN KLIPPES?????
+def besked(msg, color):
+    mesg = font_style.render(msg, True, color)
+    dis.blit(mesg, [dis_width/6, dis_height/3])
+
+
+# Spillet kan enten slutte og lukke skærmen ned (de er False for at spillet kan køre, men ændres til True når det skal slutte)
+def spilloop():
+    spil_slut = False
+    spil_luk = False
+    # for at opdatere koordinaterne for slangen konstant laves x og y
+    x0 = dis_width/2
+    y0 = dis_height/2
+    # dvs. at x1 og y1 repræsenterer alle ændringer sammenlignet med x0 og y0
+    x1 = 0
+    y1 = 0
+    # slange listen som er tom dict. hvor den får værdier af at spise mad1 eller mad2
+    slange_liste = []
+    # slanges længde gør at den kan udvides (ved 0 har den ingen krop og den har 1 tern til at starte med)
+    slange_str = 1
+
+    # Slangen udvides når der spises en firkant(mad) og den placeres tilfældigt på skærmen når den spises
+     # vi ganger med 10 udenfor parentes da vi skal sikre at mad1 er inden for skærmens koordinater
+    mad1 = round(random.randrange(0, dis_width - slange_stop) / 10.0) * 10.0
+    mad2 = round(random.randrange(0, dis_width - slange_stop) / 10.0) * 10.0
+
+
+    # selve spillet aktiveres i dette while loop
+    while not spil_slut:
+
+        while spil_luk == True:
+            dis.fill(blue)
+            besked('Du tabte! tryk på q for at slutte eller s for at spille igen', white)
+            Din_score(slange_str - 1)
+            pygame.display.update()
+
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        spil_slut = True
+                        spil_luk = False
+                    if event.key == pygame.K_s:
+                        spilloop()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_over = True
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    x1 = -slange_stop
+                    y1 = 0
+                elif event.key == pygame.K_RIGHT:
+                    x1 = slange_stop
+                    y1 = 0
+                elif event.key == pygame.K_UP:
+                    y1 = -slange_stop
+                    x1 = 0
+                elif event.key == pygame.K_DOWN:
+                    y1 = slange_stop
+                    x1 = 0
+
+        if x0 >= dis_width or x0 < 0 or y0 >= dis_height or y0 < 0:
+            spil_slut = True
+        x0 += x1
+        y0 += y1
+        dis.fill(blue)
+        pygame.draw.rect(dis, green, [mad1, mad2, slange_stop, slange_stop])
+        slange_hoved = []
+        slange_hoved.append(x0)
+        slange_hoved.append(y0)
+        slange_liste.append(slange_hoved)
+        if len(slange_liste) > slange_str:
+            del slange_liste[0]
+
+        for x in slange_liste[:-1]:
+            if x == slange_hoved:
+                spil_slut = True
+
+        vores_slange(slange_stop, slange_liste)
+        Din_score(slange_str - 1)
+
+        pygame.display.update()
+
+        if x0 == mad1 and y0 == mad2:
+            mad1 = round(random.randrange(0, dis_width - slange_stop) / 10.0) * 10.0
+            mad2 = round(random.randrange(0, dis_height - slange_stop) / 10.0) * 10.0
+            slange_str += 1
+
+        clock.tick(slange_fart)
+
+    pygame.quit()
+    quit()
+
+
+spilloop()
